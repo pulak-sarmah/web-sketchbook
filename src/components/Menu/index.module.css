@@ -14,7 +14,7 @@
     }
 
     .icon {
-      colors: theme("colors.text1");
+      color: theme("colors.text1");
     }
   }
 }
