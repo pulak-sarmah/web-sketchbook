@@ -6,7 +6,10 @@ import { menuItemClick, actionItemClick } from "@/slice/menuSlice";
 const Board = () => {
   const dispatch = useDispatch();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawHistory = useRef([]);
+  const historyPointer = useRef(0);
   const shouldDraw = useRef<boolean>(false);
+
   const { activeMenuItem, actionMenuItem } = useSelector(
     (state: RootState) => state.menu
   );
@@ -34,13 +37,28 @@ const Board = () => {
         anchor.href = URL;
         anchor.download = "sketch.jpg";
         anchor.click();
-
         context!.fillStyle = "#fff";
         context!.fillRect(0, 0, canvas.width, canvas.height);
-
-        dispatch(actionItemClick(null));
       };
+    } else if (
+      actionMenuItem === MENU_ITEMS.UNDO ||
+      actionMenuItem === MENU_ITEMS.REDO
+    ) {
+      if (historyPointer.current > 0 && actionMenuItem === MENU_ITEMS.UNDO)
+        historyPointer.current -= 1;
+
+      if (
+        historyPointer.current < drawHistory.current.length - 1 &&
+        actionMenuItem === MENU_ITEMS.REDO
+      )
+        historyPointer.current += 1;
+      const imageData = drawHistory.current[historyPointer.current];
+      if (imageData) {
+        context!.putImageData(imageData, 0, 0);
+      }
     }
+
+    dispatch(actionItemClick(null));
   }, [actionMenuItem, color, dispatch, size]);
 
   useEffect(() => {
@@ -85,6 +103,16 @@ const Board = () => {
 
     const handleMouseUp = (e: MouseEvent) => {
       shouldDraw.current = false;
+
+      const imageData = context?.getImageData(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+      );
+      // @ts-ignore
+      drawHistory.current.push(imageData);
+      historyPointer.current = drawHistory.current.length - 1;
     };
 
     canvas.addEventListener("mousedown", handleMouseDown);
