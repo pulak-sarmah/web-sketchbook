@@ -3,24 +3,46 @@ import styles from "./index.module.css";
 import { COLORS, MENU_ITEMS } from "@/constant";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleRight, faCircleLeft } from "@fortawesome/free-solid-svg-icons";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { RootState } from "@/types";
+import { changeColor, changeBrushSize } from "@/slice/toolboxSlice";
+import cx from "classnames";
 
 const ToolBox = () => {
   const [showToolbox, setShowToolbox] = useState(false);
+  const [currentSize, setCurrentSize] = useState(3);
+
+  const dispatch = useDispatch();
   const activeMenuItem = useSelector(
     (state: RootState) => state.menu.activeMenuItem
   );
-
   const showStrokeToolOption = activeMenuItem === MENU_ITEMS.PENCIL;
-
   const showBrushToolOption =
     activeMenuItem === MENU_ITEMS.ERASER || MENU_ITEMS.PENCIL;
 
-  const updateBrushSize = (e: React.ChangeEvent<HTMLInputElement>) => {};
+  const { color } = useSelector(
+    (state: RootState) => state.toolbox[activeMenuItem]
+  );
+
+  const updateBrushSize = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCurrentSize(+e.target.value);
+    dispatch(changeBrushSize({ item: activeMenuItem, size: e.target.value }));
+  };
+
+  const updateColor = (newColor: string) => {
+    dispatch(changeColor({ item: activeMenuItem, color: newColor }));
+  };
 
   const handleToolbox = () => {
     setShowToolbox(!showToolbox);
+  };
+
+  const handleColorBoxClick: React.MouseEventHandler<HTMLDivElement> = (e) => {
+    const target = e.target as HTMLDivElement;
+    if (target.classList.contains(styles.colorBox)) {
+      const clickedColor = target.style.backgroundColor;
+      updateColor(clickedColor);
+    }
   };
 
   return showToolbox ? (
@@ -44,31 +66,44 @@ const ToolBox = () => {
       {showStrokeToolOption && (
         <div className={styles.toolItem}>
           <h4 className={styles.toolTetx}>Stroke Color</h4>
-          <div className={styles.itemContainer}>
+          <div className={styles.itemContainer} onClick={handleColorBoxClick}>
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.BLACK,
+              })}
               style={{ backgroundColor: COLORS.BLACK }}
             />
+
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.RED,
+              })}
               style={{ backgroundColor: COLORS.RED }}
             />
 
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.ORANGE,
+              })}
               style={{ backgroundColor: COLORS.ORANGE }}
             />
 
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.YELLOW,
+              })}
               style={{ backgroundColor: COLORS.YELLOW }}
             />
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.GREEN,
+              })}
               style={{ backgroundColor: COLORS.GREEN }}
             />
             <div
-              className={styles.colorBox}
+              className={cx(styles.colorBox, {
+                [styles.active]: color === COLORS.BLUE,
+              })}
               style={{ backgroundColor: COLORS.BLUE }}
             />
           </div>
@@ -84,6 +119,7 @@ const ToolBox = () => {
               min={1}
               max={10}
               step={1}
+              value={currentSize}
               onChange={updateBrushSize}
             />
           </div>
