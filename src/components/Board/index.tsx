@@ -21,6 +21,36 @@ const Board = () => {
     (state: RootState) => state.toolbox[activeMenuItem]
   );
 
+  // useEffect(() => {
+  //   if (!canvasRef.current) return;
+  //   const canvas = canvasRef.current;
+  //   const context = canvas.getContext("2d");
+
+  //   if (actionMenuItem === MENU_ITEMS.DOWNLOAD) {
+  //     const URL = canvas.toDataURL();
+  //     const anchor = document.createElement("a");
+  //     anchor.href = URL;
+  //     anchor.download = "sketch.jpg";
+  //     anchor.click();
+  //   } else if (
+  //     actionMenuItem === MENU_ITEMS.UNDO ||
+  //     actionMenuItem === MENU_ITEMS.REDO
+  //   ) {
+  //     if (historyPointer.current >= 0 && actionMenuItem === MENU_ITEMS.UNDO)
+  //       historyPointer.current -= 1;
+  //     if (
+  //       historyPointer.current < drawHistory.current.length - 1 &&
+  //       actionMenuItem === MENU_ITEMS.REDO
+  //     ) {
+  //       historyPointer.current += 1;
+  //     }
+  //     context!.clearRect(0, 0, canvas.width, canvas.height);
+  //     const imageData = drawHistory.current[historyPointer.current];
+  //     context!.putImageData(imageData, 0, 0);
+  //   }
+  //   dispatch(actionItemClick(null));
+  // }, [actionMenuItem, dispatch]);
+
   useEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
@@ -36,16 +66,25 @@ const Board = () => {
       actionMenuItem === MENU_ITEMS.UNDO ||
       actionMenuItem === MENU_ITEMS.REDO
     ) {
-      if (historyPointer.current > 0 && actionMenuItem === MENU_ITEMS.UNDO)
+      if (historyPointer.current >= 0 && actionMenuItem === MENU_ITEMS.UNDO)
         historyPointer.current -= 1;
       if (
         historyPointer.current < drawHistory.current.length - 1 &&
         actionMenuItem === MENU_ITEMS.REDO
-      )
+      ) {
         historyPointer.current += 1;
-      const imageData = drawHistory.current[historyPointer.current];
-      context!.putImageData(imageData, 0, 0);
+      }
+
+      context!.clearRect(0, 0, canvas.width, canvas.height);
+
+      const imageData = drawHistory.current[
+        historyPointer.current
+      ] as ImageData;
+      if (imageData && imageData instanceof ImageData) {
+        context!.putImageData(imageData, 0, 0);
+      }
     }
+
     dispatch(actionItemClick(null));
   }, [actionMenuItem, dispatch]);
 
@@ -99,6 +138,10 @@ const Board = () => {
         x: (e as MouseEvent).clientX || (e as TouchEvent).touches[0].clientX,
         y: (e as MouseEvent).clientY || (e as TouchEvent).touches[0].clientY,
       });
+      drawHistory.current = drawHistory.current.slice(
+        0,
+        historyPointer.current + 1
+      );
     };
 
     const handleMouseMove = (e: MouseEvent | TouchEvent) => {
