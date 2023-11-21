@@ -110,7 +110,6 @@ const Board = () => {
     };
   }, [color, size]);
 
-  // before browser pain
   useLayoutEffect(() => {
     if (!canvasRef.current) return;
     const canvas = canvasRef.current;
